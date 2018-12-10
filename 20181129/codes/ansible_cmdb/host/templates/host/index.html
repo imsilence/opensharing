@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}主机管理{% endblock %}
+{% block expanded_host %}is-expanded{% endblock %}
+{% block active_host_cloud %}active{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="tile">
+            <div class="tile-body">
+                <table class="table table-bordered table-hover table-sm" id="platform">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>IP(主机名)</th>
+                            <th>操作系统</th>
+                            <th>配置(CPU/内存)</th>
+                            <th>架构</th>
+                            <th>发现时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for object in objects %}
+                            <tr>
+                                <td>
+                                    <i class="fa fa-circle" data-toggle="tooltip" title="最后时间: {{ object.last_time|date:'Y-m-d H:i:s' }}"
+                                        {% if object.is_online %}
+                                            style="color:green;"
+                                        {% else %}
+                                            style="color:red;"
+                                        {% endif %}
+                                    aria-hidden="true"></i>
+                                    <a href="javascript:void(0)" data-id="{{ object.id }}">{{ object.ip}}({{ object.name }})</a>
+                                </td>
+                                <td>{{ object.os }}</td>
+                                <td>{{ object.cpu }} 核 / {{ object.mem }} MB</td>
+                                <td>{{ object.arch }}</td>
+                                <td>{{ object.created_time|date:'Y-m-d H:i:s' }}</td>
+                                <td>
+                                    <a class="btn btn-sm btn-danger btn-delete" role="button" data-id="{{ object.id }}" data-name="{{ object.ip}}({{ object.name }})" data-toggle="tooltip" title="删除"><i class="fa fa-trash" aria-hidden="true"></i></a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="6">暂无数据</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+jQuery(document).ready(function() {
+    jQuery('a.btn-delete').on('click', function() {
+        var id = jQuery(this).data("id"), name= jQuery(this).data("name");
+        if(confirm("确认删除主机记录:" + name)) {
+            window.location.replace("{% url 'host:delete' %}?pk=" + id);
+        }
+    });
+});
+{% endblock %}
