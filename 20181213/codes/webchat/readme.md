@@ -6,6 +6,7 @@
 5. python manage.py migrate
 6. python manage.py collectstatic
 7. gunicorn -w 5 -k gevent -b 0.0.0.0:9990 webchat.wsgi
+6. python manage.py msg
 
 知识点:
 1. websocket
