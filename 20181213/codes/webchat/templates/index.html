@@ -39,7 +39,7 @@
                 <div class="wrapper-content">
                     <div class="ibox chat-view">
                         <div class="ibox-title">
-                            <small class="pull-right text-muted">在线人数: <span id="online_users"></span></small>
+                            <small class="pull-right text-muted"><span id="user_online"></span>位(在线) / <span id="user_total"></span>位(总数)</small>
                             聊天窗口
                         </div>
                         <div class="ibox-content">
@@ -170,6 +170,7 @@
                                         var panel = jQuery('.users-list');
                                         var contents = [];
                                         var online = 0;
+                                        jQuery('#user_total').text(json['msg'].length);
                                         jQuery.each(json['msg'], function(k, v) {
                                             if(v['online']) {
                                                 online += 1;
@@ -180,7 +181,7 @@
                                             msg = msg.replace(/#status_text#/g, v['online'] ? '在线' : '离线');
                                             contents.push(msg);
                                         });
-                                        jQuery('#online_users').text(online);
+                                        jQuery('#user_online').text(online);
                                         panel.html(contents.join(""));
                                         break;
                                     default:
