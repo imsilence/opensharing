@@ -131,7 +131,6 @@
 
                     ws.onopen = function() {
                         console.log("WebSocket open");
-                        ws.send(JSON.stringify({"type" : "online"}));
                     };
 
                     ws.onmessage = function(e) {
@@ -198,7 +197,6 @@
 
                 jQuery(".a-logout").on("click", function() {
                     console.log("退出登录");
-                    websocket.send(JSON.stringify({"type" : "offline"}));
                     window.location.replace("{% url 'logout' %}");
                 });
 
