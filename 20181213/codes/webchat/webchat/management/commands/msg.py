@@ -15,7 +15,7 @@ class Command(BaseCommand):
         redis_cli = get_redis_connection()
         redis_pubsub = redis_cli.pubsub()
         redis_pubsub.subscribe(key_subscribe)
-
+        print('start msg command')
         for item in redis_pubsub.listen():
             if item['type'] == 'message':
                 msg = json.loads(item['data'])

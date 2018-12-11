@@ -72,7 +72,7 @@
                 </div>
             </div>
         </div>
-
+        <audio id="notify" src="{% static 'audio/notify.ogg'%}" muted></audio>
         <script type="text/javascript" src="{% static 'js/jquery-2.1.1.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/plugins/metisMenu/jquery.metisMenu.js' %}"></script>
@@ -137,6 +137,12 @@
 
                     ws.onmessage = function(e) {
                         console.log("msg:" + e.data);
+                        try {
+                            jQuery('#notify')[0].play();
+                        } catch(e) {
+                            console.log(e);
+                        }
+
                         try{
                             var json = jQuery.parseJSON(e.data);
                             if(json['code'] == 400) {
