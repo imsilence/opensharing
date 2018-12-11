@@ -219,6 +219,16 @@
 
                     }
                 });
+
+                jQuery(window).on('beforeunload', function() {
+                    return '确定离开?';
+                });
+
+                jQuery(document).keydown(function(event) {
+                    if(event['ctrlKey'] && event['keyCode'] === 13) {
+                        jQuery("#btn-message").trigger("click");
+                    }
+                });
             });
         </script>
     </body>
