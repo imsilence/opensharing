@@ -85,6 +85,17 @@ def msg(request):
             redis_pubsub.subscribe(key_subscribe)  #订阅消息
 
             _online_offline(redis_cli, user, 'online') #在线
+            msgs = list(Message.objects.order_by('-create_time')[:10])
+            msgs.reverse()
+            for msg in msgs:
+                message = {}
+                message['user'] = {'pk' : msg.from_user.pk, 'email' : msg.from_user.email}
+                message['date'] = msg.create_time.strftime('%Y-%m-%d %H:%M:%S')
+                message['msg'] = msg.msg
+                message['type'] = 'msg'
+                message['code'] = 200
+                websocket.send(json.dumps(message))
+
             while True:
                 ws_message = websocket.read() # 获取websocket消息
                 sub_message = redis_pubsub.get_message() # 获取redis广播消息

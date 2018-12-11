@@ -81,8 +81,13 @@ class User(models.Model):
         except ObjectDoesNotExist as e:
             return None
 
+    def __str__(self):
+        return '{0}'.format(self.email)
 
 class Message(models.Model):
     from_user = models.ForeignKey(User, on_delete=models.CASCADE)
     msg = models.TextField(null=False, default='')
-    create_time = models.DateTimeField(auto_now_add=True, null=False)
+    create_time = models.DateTimeField(null=False)
+
+    def __str__(self):
+        return '{0} {1} {2}'.format(self.from_user, self.msg, self.create_time.strftime('%Y-%m-%d %H:%M:%S'))
