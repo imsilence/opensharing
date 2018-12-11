@@ -67,14 +67,10 @@ def index(request):
 @require_websocket
 def msg(request):
     '''websocket消息处理'''
-
-    user = request.session.get('user')
-
-    #获取websocket连接对象
-    websocket = request.websocket
-
     key_subscribe = 'webchat:all'
-    key_user = 'webchat:users'
+
+    websocket = request.websocket #获取websocket连接对象
+    user = request.session.get('user')
 
     #验证用户是否登陆
     if user is None:
@@ -84,69 +80,57 @@ def msg(request):
         redis_pubsub = None
         try:
             #使用redis发布订阅功能广播消息
-            #获取连接
-            redis_cli = get_redis_connection()
-
-            redis_cli.publish(key_subscribe, json.dumps({'type' : 'online', 'user' : user, 'date' : timezone.now().strftime('%Y-%m-%d %H:%M:%S')}))
-
-            #订阅消息
+            redis_cli = get_redis_connection() #获取redis连接
             redis_pubsub = redis_cli.pubsub()
-            redis_pubsub.subscribe(key_subscribe)
+            redis_pubsub.subscribe(key_subscribe)  #订阅消息
 
-            # 用户上线,更新redis用户信息(在线状态, 上线时间), 广播给所有用户当前上线
-            redis_info = redis_cli.hget(key_user, user['pk'])
-            redis_info = json.loads(redis_info) if redis_info else {}
-            redis_info.update({'pk' : user['pk'], 'email' : user['email'], 'online' : True, 'online_time' : time.time()})
-            # 使用map结构存储用户信息, pk : user
-            redis_cli.hset(key_user, user['pk'], json.dumps(redis_info))
-
-            # 广播所有用户信息, 更新web页面状态
-            users = redis_cli.hgetall(key_user)
-            users = [json.loads(user) for user in users.values()]
-            users.sort(key=lambda x: (not x['online'], x['pk']))
-            redis_cli.publish(key_subscribe, json.dumps({'type' : 'user', 'msg' : users}))
-
+            _online_offline(redis_cli, user, 'online') #在线
             while True:
-                # 获取websocket消息
-                ws_message = websocket.read()
-
-                # 获取redis广播消息
-                sub_message = redis_pubsub.get_message()
+                ws_message = websocket.read() # 获取websocket消息
+                sub_message = redis_pubsub.get_message() # 获取redis广播消息
 
                 if ws_message:
                     message = json.loads(ws_message)
                     message['user'] = user
                     message['date'] = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
-
-                    # 广播消息
-                    redis_cli.publish(key_subscribe, json.dumps(message))
+                    redis_cli.publish(key_subscribe, json.dumps(message)) # 广播消息
 
                 if sub_message and sub_message['type'] == 'message':
-                    # 将redis广播消息发送给浏览器
                     messsage = json.loads(sub_message['data'])
                     messsage['code'] = 200
-                    websocket.send(json.dumps(messsage))
-        except BaseException as e:
-            print(e)
+                    websocket.send(json.dumps(messsage)) # 将redis广播消息发送给浏览器
         finally:
-            print("close")
-
-            redis_info.update({'pk' : user['pk'], 'email' : user['email'], 'online' : False, 'offline_time' : time.time()})
-            # 取消订阅
             if redis_pubsub:
-                redis_pubsub.unsubscribe(key_subscribe)
+                redis_pubsub.unsubscribe(key_subscribe) # 取消订阅
 
             if redis_cli:
-                # 用户下线,更新redis用户信息(在线状态, 离线时间), 广播给所有用户当前下线
-                redis_cli.hset(key_user, user['pk'], json.dumps(redis_info))
-                redis_cli.publish(key_subscribe, json.dumps({'type' : 'offline', 'user' : user, 'date' : timezone.now().strftime('%Y-%m-%d %H:%M:%S')}))
-
-                # 广播所有用户信息, 更新web页面状态
-                users = redis_cli.hgetall(key_user)
-                users = [json.loads(user) for user in users.values()]
-                users.sort(key=lambda x: (not x['online'], x['pk']))
-                redis_cli.publish(key_subscribe, json.dumps({'type' : 'user', 'msg' : users}))
+                _online_offline(redis_cli, user, 'offline') #离线
 
 
 
+def _online_offline(redis_cli, user, stype='online'):
+    '''用户/离线数据更新&消息广播'''
+    key_user = 'webchat:users'
+    key_subscribe = 'webchat:all'
 
+    # 用户上线/下线更新redis用户信息(在线状态, 上线和离线时间)
+    redis_cli.publish(key_subscribe, json.dumps({'type' : stype, 'user' : user}))
+
+    # 使用map结构存储用户信息, pk : user
+    redis_info = redis_cli.hget(key_user, user['pk'])
+    redis_info = json.loads(redis_info) if redis_info else {}
+    redis_info.update({'pk' : user['pk'], 'email' : user['email']})
+
+    if stype == 'online':
+        redis_info.update({'online' : True, 'online_time' : time.time()})
+    else:
+        redis_info.update({'online' : False, 'offline_time' : time.time()})
+
+    # 更新redis数据
+    redis_cli.hset(key_user, user['pk'], json.dumps(redis_info))
+
+    # 广播所有用户信息, 更新web页面状态
+    users = redis_cli.hgetall(key_user)
+    users = [json.loads(user) for user in users.values()]
+    users.sort(key=lambda x: (not x['online'], x['pk']))
+    redis_cli.publish(key_subscribe, json.dumps({'type' : 'user', 'msg' : users}))

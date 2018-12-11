@@ -28,7 +28,7 @@
                                     <span class="m-r-sm text-muted welcome-message">当前用户: {{ request.session.user.email }}</span>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="a-logout">
+                                    <a href="{% url 'logout' %}" class="a-logout">
                                         <i class="fa fa-sign-out"></i> 退出
                                     </a>
                                 </li>
@@ -81,6 +81,7 @@
         <script type="text/javascript" src="{% static 'js/plugins/toastr/toastr.min.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/xss.js' %}"></script>
         <script type="text/javascript">
+
             jQuery(document).ready(function() {
                 toastr.options = {
                     "closeButton": true,
@@ -194,11 +195,6 @@
                 }
 
                 websocket = get_websocket();
-
-                jQuery(".a-logout").on("click", function() {
-                    console.log("退出登录");
-                    window.location.replace("{% url 'logout' %}");
-                });
 
                 jQuery("#btn-message").on("click", function() {
                     var msg = jQuery("#text-message").val();
