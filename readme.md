@@ -9,3 +9,6 @@
     下载: [百度网盘](https://pan.baidu.com/s/1MstU5AV2D-uY8XacbFsd2Q) 提取码：yseo
 
 + 20181213 [Django WebSocket Redis在线聊天室](20181213 "Django WebSocket Redis在线聊天室")
+
+    下载: [百度网盘](https://pan.baidu.com/s/1WohstPE9SKbSLeyPIkOMIA) 提取码：pn5u
+
